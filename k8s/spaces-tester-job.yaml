@@ -1,0 +1,39 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: spaces-tester
+  namespace: spaces-test
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 600
+  template:
+    spec:
+      containers:
+        - name: tester
+          image: cmind/spaces-parallel-test:latest
+          command: ["/app/app"]
+          args: ["-count=2000", "-parallel=10", "-logfile=/logs/results.json"]
+          env:
+            - name: SPACES_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: spaces-secret
+                  key: accessKey
+            - name: SPACES_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: spaces-secret
+                  key: secretKey
+            - name: SPACES_ENDPOINT
+              value: https://ams3.digitaloceanspaces.com
+            - name: SPACES_REGION
+              value: us-east-1
+            - name: SPACES_BUCKET
+              value: ams-storage-dev
+          volumeMounts:
+            - name: log-volume
+              mountPath: /logs
+      restartPolicy: Never
+      volumes:
+        - name: log-volume
+          emptyDir: {}
